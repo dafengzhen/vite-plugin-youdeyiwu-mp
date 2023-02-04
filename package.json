@@ -1,0 +1,66 @@
+{
+  "name": "@youdeyiwu/vite-plugin-mp",
+  "version": "0.0.0",
+  "description": "vite-plugin-youdeyiwu-mp 尤得一物-小程序插件",
+  "type": "module",
+  "main": "dist/main.umd.cjs",
+  "module": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "require": "./dist/main.umd.cjs"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/html-minifier-terser": "^7.0.0",
+    "@types/node": "^18.11.18",
+    "glob": "^8.1.0",
+    "html-minifier-terser": "^7.1.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-delete": "^2.0.0",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.1"
+  },
+  "peerDependencies": {
+    "glob": ">=8.1.0",
+    "html-minifier-terser": ">=7.1.0",
+    "rollup-plugin-copy": ">=3.4.0",
+    "rollup-plugin-delete": ">=2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "yarn build --mode development --watch",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dafengzhen/vite-plugin-youdeyiwu-mp.git"
+  },
+  "keywords": [
+    "vite",
+    "plugin",
+    "youdeyiwu",
+    "mp",
+    "weixin"
+  ],
+  "author": "dafengzhen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dafengzhen/vite-plugin-youdeyiwu-mp/issues"
+  },
+  "homepage": "https://github.com/dafengzhen/vite-plugin-youdeyiwu-mp#readme"
+}
