@@ -51,8 +51,9 @@ yarn build
 
 # 4. 配置
 
-- buildDir 编译小程序的代码目录
-- outputDir 输出编译小程序的代码目录
+- buildDir 必填。编译小程序的代码目录
+- outputDir 必填。输出编译小程序的代码目录
+- copyPrivateConfigAppid 可选，默认为 true。复制项目私有配置 appid 到配置中去
 
 # 5. 其它
 
