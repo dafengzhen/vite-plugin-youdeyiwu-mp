@@ -1,6 +1,6 @@
 {
   "name": "@youdeyiwu/vite-plugin-mp",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "vite-plugin-youdeyiwu-mp 尤得一物-小程序插件",
   "type": "module",
   "main": "dist/main.umd.cjs",
@@ -53,9 +53,14 @@
   "keywords": [
     "vite",
     "plugin",
+    "vite-plugin",
     "youdeyiwu",
+    "weixin",
     "mp",
-    "weixin"
+    "typescript",
+    "sass",
+    "wxml",
+    "wxss"
   ],
   "author": "dafengzhen",
   "license": "MIT",

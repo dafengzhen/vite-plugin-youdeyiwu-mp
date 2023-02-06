@@ -12,6 +12,7 @@ export default function YoudeyiwuMpVitePlugin(
         buildDir: string;
         outputDir: string;
         copyPrivateConfigAppid?: boolean;
+        minify?: boolean
     }
 ): PluginOption {
     let _appid: string;
@@ -24,7 +25,7 @@ export default function YoudeyiwuMpVitePlugin(
             }
 
             const copyPrivateConfigAppid =
-                typeof options.copyPrivateConfigAppid === 'undefined'
+                 options.copyPrivateConfigAppid === undefined
                     ? true
                     : options.copyPrivateConfigAppid;
             const buildPath = normalizePath(options.buildDir);
@@ -64,6 +65,7 @@ export default function YoudeyiwuMpVitePlugin(
                 ...config,
                 build: {
                     ...config.build,
+                    minify: options.minify === undefined ? true: options.minify,
                     target: ['esnext', 'ios11', 'chrome66'],
                     cssTarget: ['esnext', 'ios11', 'chrome66'],
                     reportCompressedSize: false,
@@ -173,9 +175,11 @@ export default function YoudeyiwuMpVitePlugin(
                             0,
                             fileName.lastIndexOf('.js')
                         );
-                        bundleElement.code = bundleElement.code
-                            .replace(/^"use strict";console.log\(`'(.*)'`\);/g, '$1')
-                            .replace(/(\r\n|\n|\r)/gm, '');
+                        let code = bundleElement.code.substring(
+                            '"use strict";console.log(`\''.length + 1
+                        );
+                        code = code.substring(0, code.length - "'`);".length - 1);
+                        bundleElement.code = code.replace(/(\r\n|\n|\r)/gm, '');
                     } else if (
                         bundle.includes('project.config.json') &&
                         bundleElement.facadeModuleId
