@@ -1,6 +1,6 @@
 {
   "name": "@youdeyiwu/vite-plugin-mp",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "vite-plugin-youdeyiwu-mp 尤得一物-小程序插件",
   "type": "module",
   "main": "dist/main.umd.cjs",

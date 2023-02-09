@@ -20,6 +20,7 @@ export default function YoudeyiwuMpVitePlugin(
     let _appid: string;
     let _urlCheck: boolean;
     const delFileTargets = options.delFileTargets || [];
+    const minify = options.minify === undefined ? true : options.minify;
 
     return {
         name: 'vite-plugin-youdeyiwu-mp',
@@ -76,7 +77,7 @@ export default function YoudeyiwuMpVitePlugin(
                 ...config,
                 build: {
                     ...config.build,
-                    minify: options.minify === undefined ? true : options.minify,
+                    minify,
                     target: ['esnext', 'ios11', 'chrome66'],
                     cssTarget: ['esnext', 'ios11', 'chrome66'],
                     reportCompressedSize: false,
@@ -159,7 +160,7 @@ export default function YoudeyiwuMpVitePlugin(
                     _id.substring(0, _id.lastIndexOf('?raw')),
                     'utf-8'
                 );
-                const code = await htmlMinifierTerser.minify(file, {
+                const code = minify ? await htmlMinifierTerser.minify(file, {
                     caseSensitive: true,
                     collapseWhitespace: true,
                     keepClosingSlash: true,
@@ -168,7 +169,7 @@ export default function YoudeyiwuMpVitePlugin(
                     removeScriptTypeAttributes: true,
                     removeStyleLinkTypeAttributes: true,
                     useShortDoctype: true,
-                });
+                }) : file;
                 return {
                     code: `console.log(\`'${code}'\`);`,
                     map: null,
