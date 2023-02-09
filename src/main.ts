@@ -12,22 +12,30 @@ export default function YoudeyiwuMpVitePlugin(
         buildDir: string;
         outputDir: string;
         copyPrivateConfigAppid?: boolean;
-        minify?: boolean
+        copyPrivateConfigUrlCheck?: boolean;
+        delFileTargets?: string[];
+        minify?: boolean;
     }
 ): PluginOption {
     let _appid: string;
+    let _urlCheck: boolean;
+    const delFileTargets = options.delFileTargets || [];
 
     return {
         name: 'vite-plugin-youdeyiwu-mp',
         config: async (config) => {
-            if (!config.plugins || !options.buildDir || !options.outputDir) {
+            if (config.plugins == null || !options.buildDir || !options.outputDir) {
                 return config;
             }
 
             const copyPrivateConfigAppid =
-                 options.copyPrivateConfigAppid === undefined
+                options.copyPrivateConfigAppid === undefined
                     ? true
                     : options.copyPrivateConfigAppid;
+            const copyPrivateConfigUrlCheck =
+                options.copyPrivateConfigUrlCheck === undefined
+                    ? false
+                    : options.copyPrivateConfigUrlCheck;
             const buildPath = normalizePath(options.buildDir);
             const outputPath = normalizePath(options.outputDir);
             const buildParse = path.parse(buildPath);
@@ -44,11 +52,11 @@ export default function YoudeyiwuMpVitePlugin(
                 .sync(`${buildParse.dir}/project.config.json`)
                 .map((value) => `${value}?raw`);
             const entry = [...files, ...scsss, ...wxmls, ...configs];
-            if (!entry.length) {
+            if (entry.length === 0) {
                 return config;
             }
 
-            if (copyPrivateConfigAppid) {
+            if (copyPrivateConfigAppid || copyPrivateConfigUrlCheck) {
                 try {
                     const projectPrivateConfigJson = JSON.parse(
                         fs.readFileSync(
@@ -57,6 +65,9 @@ export default function YoudeyiwuMpVitePlugin(
                         )
                     );
                     _appid = projectPrivateConfigJson.appid;
+                    if (typeof projectPrivateConfigJson.setting === 'object') {
+                        _urlCheck = projectPrivateConfigJson.setting.urlCheck;
+                    }
                 } catch (e) {
                 }
             }
@@ -65,7 +76,7 @@ export default function YoudeyiwuMpVitePlugin(
                 ...config,
                 build: {
                     ...config.build,
-                    minify: options.minify === undefined ? true: options.minify,
+                    minify: options.minify === undefined ? true : options.minify,
                     target: ['esnext', 'ios11', 'chrome66'],
                     cssTarget: ['esnext', 'ios11', 'chrome66'],
                     reportCompressedSize: false,
@@ -105,9 +116,13 @@ export default function YoudeyiwuMpVitePlugin(
                                 if (name.endsWith('.scss')) {
                                     assets.push(name);
                                 } else if (name.endsWith('.css')) {
-                                    const shift = assets.shift();
-                                    if (shift) {
-                                        return shift.substring(0, shift.length - 4) + 'wxss';
+                                    const findIndex = assets.findIndex((value) =>
+                                        value.endsWith(name.replace('.css', '.scss'))
+                                    );
+                                    if (findIndex !== -1) {
+                                        const find = assets[findIndex];
+                                        assets.splice(findIndex, 1);
+                                        return find.substring(0, find.length - 4) + 'wxss';
                                     }
                                 }
                                 return name;
@@ -129,6 +144,7 @@ export default function YoudeyiwuMpVitePlugin(
                                     targets: [
                                         `${outputParse.name}/${buildParse.name}/**/*.ts`,
                                         `${outputParse.name}/${buildParse.name}/**/*.scss`,
+                                        ...delFileTargets,
                                     ],
                                 }),
                             },
@@ -144,6 +160,7 @@ export default function YoudeyiwuMpVitePlugin(
                     'utf-8'
                 );
                 const code = await htmlMinifierTerser.minify(file, {
+                    caseSensitive: true,
                     collapseWhitespace: true,
                     keepClosingSlash: true,
                     removeComments: true,
@@ -151,7 +168,6 @@ export default function YoudeyiwuMpVitePlugin(
                     removeScriptTypeAttributes: true,
                     removeStyleLinkTypeAttributes: true,
                     useShortDoctype: true,
-                    minifyCSS: true,
                 });
                 return {
                     code: `console.log(\`'${code}'\`);`,
@@ -163,10 +179,10 @@ export default function YoudeyiwuMpVitePlugin(
                     map: null,
                 };
             }
-            return;
+            return null;
         },
         generateBundle: (_options, _bundle) => {
-            for (let bundle in _bundle) {
+            for (const bundle in _bundle) {
                 const bundleElement = _bundle[bundle] as OutputChunk;
                 if (bundleElement.type === 'chunk') {
                     if (bundle.endsWith('.wxml.js')) {
@@ -175,9 +191,11 @@ export default function YoudeyiwuMpVitePlugin(
                             0,
                             fileName.lastIndexOf('.js')
                         );
-                        let code = bundleElement.code.substring(
-                            '"use strict";console.log(`\''.length + 1
-                        );
+
+                        const start = '"use strict";console.log(`\'';
+                        let code = bundleElement.code.startsWith(start)
+                            ? bundleElement.code.substring(start.length)
+                            : bundleElement.code.substring(start.length + 1);
                         code = code.substring(0, code.length - "'`);".length - 1);
                         bundleElement.code = code.replace(/(\r\n|\n|\r)/gm, '');
                     } else if (
@@ -200,6 +218,13 @@ export default function YoudeyiwuMpVitePlugin(
                         );
                         if (_appid) {
                             data.appid = _appid;
+                        }
+                        if (
+                            _urlCheck !== undefined &&
+                            _urlCheck !== null &&
+                            typeof data.setting === 'object'
+                        ) {
+                            data.setting.urlCheck = _urlCheck;
                         }
                         bundleElement.code = JSON.stringify(data);
                     }

@@ -54,6 +54,8 @@ yarn build
 - buildDir 必填。编译小程序的代码目录
 - outputDir 必填。输出编译小程序的代码目录
 - copyPrivateConfigAppid 可选，默认为 true。复制项目私有配置 appid 到配置中去
+- copyPrivateConfigUrlCheck 可选，默认为 false。复制项目私有配置 setting.urlCheck 到配置中去
+- delFileTargets 可选，默认为 []。删除生成目录下的某个文件，使用绝对路径 path.resolve 表示
 - minify 可选，默认为 true。是否压缩文件
 
 # 5. 其它
