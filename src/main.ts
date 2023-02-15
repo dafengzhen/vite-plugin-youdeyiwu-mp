@@ -1,11 +1,11 @@
 import copy from 'rollup-plugin-copy';
-import del from "rollup-plugin-delete";
-import fs from 'fs'
-import glob from "glob";
+import del from 'rollup-plugin-delete';
+import fs from 'fs';
+import glob from 'glob';
 import htmlMinifierTerser from 'html-minifier-terser';
 import path from 'path';
-import {normalizePath, type PluginOption} from 'vite'
-import {type OutputChunk} from "rollup";
+import {normalizePath, type PluginOption} from 'vite';
+import {type OutputChunk} from 'rollup';
 
 export default function YoudeyiwuMpVitePlugin(
     options = {} as {
@@ -19,8 +19,8 @@ export default function YoudeyiwuMpVitePlugin(
 ): PluginOption {
     let _appid: string;
     let _urlCheck: boolean;
-    const delFileTargets = options.delFileTargets || [];
-    const minify = options.minify === undefined ? true : options.minify;
+    const delFileTargets = options.delFileTargets ?? [];
+    const assets = [] as Array<{ id: string; name: string }>;
 
     return {
         name: 'vite-plugin-youdeyiwu-mp',
@@ -43,7 +43,6 @@ export default function YoudeyiwuMpVitePlugin(
             const outputParse = path.parse(outputPath);
             const buildDir = buildPath;
             const outputDir = outputPath;
-            const assets = [] as string[];
             const files = glob.sync(`${buildDir}/**/*.ts`);
             const scsss = glob.sync(`${buildDir}/**/*.scss`);
             const wxmls = glob
@@ -77,7 +76,7 @@ export default function YoudeyiwuMpVitePlugin(
                 ...config,
                 build: {
                     ...config.build,
-                    minify,
+                    minify: options.minify === undefined ? true : options.minify,
                     target: ['esnext', 'ios11', 'chrome66'],
                     cssTarget: ['esnext', 'ios11', 'chrome66'],
                     reportCompressedSize: false,
@@ -108,25 +107,6 @@ export default function YoudeyiwuMpVitePlugin(
                                 return ew
                                     ? slice.substring(0, slice.lastIndexOf('.') + 1) + ew
                                     : slice;
-                            },
-                            assetFileNames: (chunkInfo) => {
-                                const name = chunkInfo.name;
-                                if (!name) {
-                                    throw new Error('Asset Not Fount');
-                                }
-                                if (name.endsWith('.scss')) {
-                                    assets.push(name);
-                                } else if (name.endsWith('.css')) {
-                                    const findIndex = assets.findIndex((value) =>
-                                        value.endsWith(name.replace('.css', '.scss'))
-                                    );
-                                    if (findIndex !== -1) {
-                                        const find = assets[findIndex];
-                                        assets.splice(findIndex, 1);
-                                        return find.substring(0, find.length - 4) + 'wxss';
-                                    }
-                                }
-                                return name;
                             },
                         },
                         plugins: [
@@ -160,7 +140,7 @@ export default function YoudeyiwuMpVitePlugin(
                     _id.substring(0, _id.lastIndexOf('?raw')),
                     'utf-8'
                 );
-                const code = minify ? await htmlMinifierTerser.minify(file, {
+                const code = await htmlMinifierTerser.minify(file, {
                     caseSensitive: true,
                     collapseWhitespace: true,
                     keepClosingSlash: true,
@@ -169,7 +149,7 @@ export default function YoudeyiwuMpVitePlugin(
                     removeScriptTypeAttributes: true,
                     removeStyleLinkTypeAttributes: true,
                     useShortDoctype: true,
-                }) : file;
+                });
                 return {
                     code: `console.log(\`'${code}'\`);`,
                     map: null,
@@ -228,6 +208,19 @@ export default function YoudeyiwuMpVitePlugin(
                             data.setting.urlCheck = _urlCheck;
                         }
                         bundleElement.code = JSON.stringify(data);
+                    } else if (bundle.endsWith('.css')) {
+                        assets.push({
+                            id: [...(bundleElement.viteMetadata?.importedCss ?? [])][0],
+                            name: bundleElement.fileName,
+                        });
+                    }
+                } else if (bundleElement.type === 'asset') {
+                    if (bundle.endsWith('.css')) {
+                        const find = assets.find((item) => item.id === bundle);
+                        if (find) {
+                            bundleElement.fileName =
+                                find.name.substring(0, find.name.lastIndexOf('css')) + 'wxss';
+                        }
                     }
                 }
             }
